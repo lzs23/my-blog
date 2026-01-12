@@ -1,0 +1,31 @@
+﻿今天做了一部分汇编转c的程序还未编写makefile和c语言部分的源文件代码，自己编写寄存器定义的方式只需要会即可写代码会浪费很多时间，以下是两种模板，明天进行sdk移植，在编写makefile
+
+
+方式1
+例如：
+寄存器A       地址0x12345678
+寄存器直接定义 ： #define  A    *（（volatile unsigned int *）0x12345678）
+
+最前面的解引用运算符用于获取地址内的数据，后面括号为强制类型转换，将一个16进制的数值转化成uint类型的地址，volatile可以有效防止编译器进行优化，例如当其为gpio时设置的值如果有编译器优化可能会先存储在缓冲区直到一定时间后才会读取，用volatile可以缩短其响应时间
+
+方式2
+例如：
+寄存器gpio_clk 地址0x1111 1111
+	    gpio_dir 地址0x1111 1115
+	    
+先定义一个这种类型的结构体
+typedef struct{
+volatile unsigned int gpio_clk;
+volatile unsigned int gpio_dir;
+}gpio_type;
+
+在定义基地址即在一组连续地址的寄存器中地址最小的寄存器
+#define  gpio_base   0x11111111
+最后在把基地址变为之前定义的结构体类型
+#define gpiox       ((gpio_type*)gpio_base)
+
+操作gpio_clk时   用 gpiox→gpio_clk访问
+
+先把有同一种功能的一组寄存器定义到一个结构体中在通过操作结构体中的某一值操作寄存器，此方法有限制需要两个寄存器位数必需相等，且连续，
+
+
